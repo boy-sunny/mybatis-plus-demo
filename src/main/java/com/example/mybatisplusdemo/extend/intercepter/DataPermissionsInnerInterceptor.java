@@ -19,9 +19,7 @@ import org.springframework.util.Assert;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * 基于MyBatis-Plus插件主体的 数据权限扩展插件
@@ -34,66 +32,76 @@ public class DataPermissionsInnerInterceptor extends BaseInnerInterceptor {
 
     private final DataRuler dataRuler = SpringUtil.getBean(DataRuler.class);
 
-    // private static final Cache<String, Resolver> CACHE_CONTAINER = Caffeine.newBuilder()
-    //         .maximumSize(10000)
-    //         .expireAfterWrite(Duration.ofMillis(1))
-    //         .refreshAfterWrite(Duration.ofMinutes(30))
-    //         .build();
-
     private static final Map<String, Resolver> CACHE_CONTAINER = new HashMap<>();
 
+    /**
+     * 只处理 select 场景
+     *
+     * @param executor      Executor(可能是代理对象)
+     * @param ms            MappedStatement
+     * @param parameter     parameter
+     * @param rowBounds     rowBounds
+     * @param resultHandler resultHandler
+     * @param boundSql      boundSql
+     */
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         super.beforeQuery(executor, ms, parameter, rowBounds, resultHandler, boundSql);
-        log.warn("DataPermissionsInnerInterceptor beforeQuery");
 
-        Resolver resolving = getResolver(ms);
-        Method method = resolving.getMethod();
-        DataPermissions dataPermissions = method.getAnnotation(DataPermissions.class);
-        String expression = dataPermissions.expression();
-        Assert.notNull(expression, "自定义的表达式 没有被捕捉到");
+        if (!SqlCommandType.SELECT.equals(ms.getSqlCommandType())) {
+            return;
+        }
 
-        log.warn("获取的数据规则: {}", dataRuler.get());
+        DataPermissions dataPermissions = getDataPermissions(ms);
+        if (Objects.nonNull(dataPermissions) && dataPermissions.isClose()) {
+            log.warn("== beforeQuery == 不需要数据权限改造SQL !!!!!!!!");
+            return;
+        }
+
+        log.warn("== beforeQuery == 开启SQL改造，获取的数据规则: {}", dataRuler.get());
+
     }
 
-    @Override
-    public boolean willDoUpdate(Executor executor, MappedStatement ms, Object parameter) {
-        log.warn("DataPermissionsInnerInterceptor willDoUpdate");
-        return super.willDoUpdate(executor, ms, parameter);
-    }
-
+    /**
+     * 处理 update 和 delete 事件
+     *
+     * @param executor  Executor(可能是代理对象)
+     * @param ms        MappedStatement
+     * @param parameter parameter
+     */
     @Override
     public void beforeUpdate(Executor executor, MappedStatement ms, Object parameter) {
         super.beforeUpdate(executor, ms, parameter);
-        log.warn("DataPermissionsInnerInterceptor beforeUpdate");
+
+        if (SqlCommandType.UPDATE.equals(ms.getSqlCommandType()) || SqlCommandType.DELETE.equals(ms.getSqlCommandType())) {
+
+            DataPermissions dataPermissions = getDataPermissions(ms);
+            if (Objects.nonNull(dataPermissions) && dataPermissions.isClose()) {
+                log.warn("== beforeUpdate == 不需要数据权限改造SQL !!!!!!!!");
+                return;
+            }
+
+            log.warn("== beforeUpdate == 开启SQL改造，获取的数据规则: {}", dataRuler.get());
+        }
+
     }
 
-    @Override
-    public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {
-        super.beforePrepare(sh, connection, transactionTimeout);
-        log.warn("DataPermissionsInnerInterceptor beforePrepare");
-
-        PluginUtils.MPStatementHandler mpSh = PluginUtils.mpStatementHandler(sh);
-        MappedStatement ms = mpSh.mappedStatement();
-        SqlCommandType sct = ms.getSqlCommandType();
-        Assert.notNull(sct, "SqlCommandType获取失败");
-    }
-
-    @Override
-    public void beforeGetBoundSql(StatementHandler sh) {
-        super.beforeGetBoundSql(sh);
-        log.warn("DataPermissionsInnerInterceptor beforeGetBoundSql");
-    }
-
-    @Override
-    public void setProperties(Properties properties) {
-        super.setProperties(properties);
-        log.warn("DataPermissionsInnerInterceptor setProperties");
+    /**
+     * 获取自定义权限注解信息
+     *
+     * @param ms MappedStatement
+     * @return {@link DataPermissions}
+     */
+    private DataPermissions getDataPermissions(MappedStatement ms) {
+        Resolver resolving = getResolver(ms);
+        Method method = resolving.getMethod();
+        return method.getAnnotation(DataPermissions.class);
     }
 
     @Data
     @AllArgsConstructor
     protected static class Resolver {
+
         private Class<?> objClass;
         private Method method;
     }

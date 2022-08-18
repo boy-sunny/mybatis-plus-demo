@@ -18,6 +18,13 @@ import java.lang.annotation.Target;
 public @interface DataPermissions {
 
     /**
+     * 自定义数据权限是否关闭
+     *
+     * @return true关闭底层数据权限处理，false（默认）反之
+     */
+    boolean isClose() default false;
+
+    /**
      * 自定义表达式
      */
     String expression() default CharSequenceUtil.EMPTY;

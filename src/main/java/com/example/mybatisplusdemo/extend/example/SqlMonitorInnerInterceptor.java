@@ -22,6 +22,7 @@ public class SqlMonitorInnerInterceptor extends BaseInnerInterceptor {
 
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+        super.beforeQuery(executor, ms, parameter, rowBounds, resultHandler, boundSql);
         log.warn("本次执行的SQL参数: {}", parameter);
     }
 

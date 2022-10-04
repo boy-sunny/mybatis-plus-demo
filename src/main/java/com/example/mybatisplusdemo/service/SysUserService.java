@@ -11,4 +11,5 @@ public interface SysUserService extends IService<SysUser> {
 
     SysUser getById(long id);
 
+    boolean updateAndClean(SysUser user);
 }

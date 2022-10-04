@@ -2,23 +2,19 @@ package com.example.mybatisplusdemo.extend.intercepter;
 
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.example.mybatisplusdemo.extend.annotation.DataPermissions;
 import com.example.mybatisplusdemo.extend.provider.DataRuler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
-import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import org.springframework.util.Assert;
 
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.util.*;
 
 /**

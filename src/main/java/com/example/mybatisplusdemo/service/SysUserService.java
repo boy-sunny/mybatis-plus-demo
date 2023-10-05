@@ -13,6 +13,8 @@ public interface SysUserService extends IService<SysUser> {
 
     boolean updateAndClean(SysUser user);
 
+	void saveAndRecordLog(SysUser user);
+
 	void saveOfProgram(SysUser user);
 
 }

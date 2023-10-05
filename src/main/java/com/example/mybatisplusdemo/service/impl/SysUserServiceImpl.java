@@ -1,6 +1,7 @@
 package com.example.mybatisplusdemo.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.mybatisplusdemo.component.event.SysLogEvent;
 import com.example.mybatisplusdemo.mapper.SysUserMapper;
 import com.example.mybatisplusdemo.model.SysUser;
 import com.example.mybatisplusdemo.model.SysUserRole;
@@ -8,6 +9,7 @@ import com.example.mybatisplusdemo.service.SysUserRoleService;
 import com.example.mybatisplusdemo.service.SysUserService;
 import com.example.mybatisplusdemo.util.TransactionUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
 	private final TransactionUtil transactionUtil;
+	private final ApplicationContext applicationContext;
 	private final SysUserRoleService sysUserRoleService;
 
 	@Override
@@ -33,6 +36,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		boolean update = this.updateById(user);
 		sysUserRoleService.saveOrUpdating(new SysUserRole(user.getId(), 123123L));
 		return update;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void saveAndRecordLog(SysUser user) {
+		System.out.println("saveAndRecordLog 线程 ID：" + Thread.currentThread().getId());
+		save(user);
+		applicationContext.publishEvent(new SysLogEvent(user));
+		int i = 1 / 0;
 	}
 
 	@Override

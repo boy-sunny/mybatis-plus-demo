@@ -21,7 +21,12 @@ public class SysUserController {
 		return userService.getById(id);
 	}
 
-	@PostMapping
+	@PostMapping("/saveAndRecordLog")
+	public void saveAndRecordLog(@RequestBody SysUser user) {
+		userService.saveAndRecordLog(user);
+	}
+
+	@PostMapping("/save")
 	public void save(@RequestBody SysUser user) {
 		userService.saveOfProgram(user);
 	}

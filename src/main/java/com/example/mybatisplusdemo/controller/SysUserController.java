@@ -3,10 +3,7 @@ package com.example.mybatisplusdemo.controller;
 import com.example.mybatisplusdemo.model.SysUser;
 import com.example.mybatisplusdemo.service.SysUserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Sunny Boy
@@ -22,6 +19,11 @@ public class SysUserController {
 	@GetMapping
 	public SysUser getById(@RequestParam Long id) {
 		return userService.getById(id);
+	}
+
+	@PostMapping
+	public void save(@RequestBody SysUser user) {
+		userService.saveOfProgram(user);
 	}
 
 }
